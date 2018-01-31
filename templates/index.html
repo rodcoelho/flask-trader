@@ -3,12 +3,22 @@
             <a href="portfolio">Portfolio</a>
         <p></p>
             <a href="buy">Buy</a>
+
+
+
         <p></p>
             <a href="sell">Sell</a>
         <p></p>
-            <a href="lookup">Look Up Symbol</a>
+
+                <form action="/lookup" method="POST">Look Up Company's Symbol:<br>
+                      <input type="text" name="name">
+                      <input type="submit" value="Look Up">
+                </form>
         <p></p>
-            <a href="getstockprice">Get Stock Price</a>
+                <form action="/getstockprice" method="POST">Get Symbol Price:<br>
+                      <input type="text" name="name">
+                      <input type="submit" value="Get Price">
+                </form>
 
 
 {% endblock %}

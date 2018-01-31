@@ -3,7 +3,12 @@
 from flask import Flask, render_template
 app = Flask(__name__)
 
-import orm
+import sqlite3
+
+import orm, model
+
+connection = sqlite3.connect('db/stocktrade.db')
+cursor = connection.cursor()
 
 @app.route('/')
 def index():

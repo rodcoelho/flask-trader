@@ -36,5 +36,11 @@ FOREIGN KEY(userID) REFERENCES users(pk),
 PRIMARY KEY(pk))
 ;""")
 
+cursor.execute("""
+INSERT INTO users(name, password, balance)
+VALUES ('{}','{}',1000000);
+    """.format('rodrigo', 'swordfish'))
+
+
 connection.commit()
 cursor.close()

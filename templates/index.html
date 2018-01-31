@@ -2,23 +2,23 @@
 {% block content %}
             <a href="portfolio">Portfolio</a>
         <p></p>
-            <a href="buy">Buy</a>
-
-
-
+            <form action="/buy" method="POST">
+                      Buy - Symbol <input type="text" name="symbol">
+                      Quantity <input type="text" name="quantity">
+                      <input type="submit" value="Buy">
+            </form>
         <p></p>
             <a href="sell">Sell</a>
         <p></p>
 
-                <form action="/lookup" method="POST">Look Up Company's Symbol:<br>
+                <form action="/lookup" method="POST">Look Up Company's Symbol:
                       <input type="text" name="name">
                       <input type="submit" value="Look Up">
                 </form>
         <p></p>
-                <form action="/getstockprice" method="POST">Get Symbol Price:<br>
-                      <input type="text" name="name">
+                <form action="/getstockprice" method="POST">Get Symbol Price:
+                      <input type="text" name="symbol">
                       <input type="submit" value="Get Price">
                 </form>
-
 
 {% endblock %}

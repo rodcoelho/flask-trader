@@ -13,13 +13,9 @@ INSERT INTO users(name, password, balance)
 VALUES ('{}','{}',100000);
     """.format(username,password))
         connection.commit()
-        cursor.close()
-        connection.close()
         return True
     except:
         connection.commit()
-        cursor.close()
-        connection.close()
         return False
 
 def login(username,password):
@@ -34,18 +30,12 @@ def login(username,password):
         fetch = cursor.fetchall()
         try:
             connection.commit()
-            cursor.close()
-            connection.close()
             return True, fetch[0][0], fetch[0][1]
         except:
             connection.commit()
-            cursor.close()
-            connection.close()
             return False, False, False
     except:
         connection.commit()
-        cursor.close()
-        connection.close()
         return False, False, False
 
 def get_balance(username):
@@ -60,36 +50,27 @@ def get_balance(username):
             """.format(username))
         fetch = cursor.fetchone()
         connection.commit()
-        cursor.close()
-        connection.close()
         return fetch[0]
     except:
         connection.commit()
-        cursor.close()
-        connection.close()
         return False
 
-def buy_stocks_users_table(quantity,price,username,balance):
+def buy_stocks_users_table(username,cost, cash_balance):
     connection = sqlite3.connect('db/stocktrade.db')
     cursor = connection.cursor()
 
     # update the balance in the USERS table to show that he bought shares
-    cost = float(quantity) * float(price)
-    difference = float(balance) - cost
+    difference = float(cash_balance) - float(cost)
 
     try:
         cursor.execute("""
             UPDATE users SET balance = '{}' WHERE name = '{}'
             ;
-                """.format(difference,username))
+                """.format(difference, username))
         connection.commit()
-        cursor.close()
-        connection.close()
         return True
     except:
         connection.commit()
-        cursor.close()
-        connection.close()
         return False
 
 def buy_stocks_transactions_table(quantity,ticker,price,username):
@@ -112,16 +93,12 @@ def buy_stocks_transactions_table(quantity,ticker,price,username):
                 ;
                     """.format(id[0],ticker,now,price, quantity,'b' ))
         connection.commit()
-        cursor.close()
-        connection.close()
         return True
     except:
         connection.commit()
-        cursor.close()
-        connection.close()
         return False
 
-def buy_stocks_positions_table(quantity,ticker,price,username, balance):
+def buy_stocks_positions_table(quantity,ticker,price,username):
     connection = sqlite3.connect('db/stocktrade.db')
     cursor = connection.cursor()
 
@@ -148,8 +125,6 @@ def buy_stocks_positions_table(quantity,ticker,price,username, balance):
                 VALUES('{}','{}','{}','{}')
                 ;""".format(id[0], str(ticker), quantity, float(price)))
         connection.commit()
-        cursor.close()
-        connection.close()
     else:
         # stock already in position - time to adjust the position
         VWAP_price = VWAP_query[0][0]
@@ -179,11 +154,8 @@ def buy_stocks_positions_table(quantity,ticker,price,username, balance):
         connection.commit()
 
         VWAP_query = cursor.fetchall()
-        print(VWAP_query)
 
         connection.commit()
-        cursor.close()
-        connection.close()
 
 def sell_get_list_of_positions(username):
     connection = sqlite3.connect('db/stocktrade.db')
@@ -240,13 +212,9 @@ def sell_stocks_user_table(username, income):
                 ;
                     """.format(new_balance, id[0]))
         connection.commit()
-        cursor.close()
-        connection.close()
         return True, new_balance, income
     except:
         connection.commit()
-        cursor.close()
-        connection.close()
         return False
 
 def sell_stocks_transactions_table(username, ticker_sell_symbol, ticker_sell_quantity,current_price):
@@ -269,13 +237,9 @@ def sell_stocks_transactions_table(username, ticker_sell_symbol, ticker_sell_qua
                     ;
                         """.format(id[0], ticker_sell_symbol, now, current_price, ticker_sell_quantity, 's'))
         connection.commit()
-        cursor.close()
-        connection.close()
         return True
     except:
         connection.commit()
-        cursor.close()
-        connection.close()
         return False
 
 def sell_stocks_positions_table(username, ticker_sell_symbol, ticker_sell_quantity,current_price):
@@ -308,8 +272,6 @@ def sell_stocks_positions_table(username, ticker_sell_symbol, ticker_sell_quanti
         ;""".format(new_position_quantity, id[0],ticker_sell_symbol))
 
     connection.commit()
-    cursor.close()
-    connection.close()
     return True
 
 def get_all_users():
@@ -326,11 +288,7 @@ def get_all_users():
         for tups in fetch:
             f2.append(list(tups))
         connection.commit()
-        cursor.close()
-        connection.close()
         return f2
     except:
         connection.commit()
-        cursor.close()
-        connection.close()
         return False

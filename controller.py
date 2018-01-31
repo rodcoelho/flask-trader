@@ -60,11 +60,48 @@ def buy():
     else:
         return render_template('error.html', h1=h1, title=title, error_message="Stock does not exist")
 
-@app.route('/sell',methods = ["GET","POST"])
+
+@app.route('/sell',methods=["GET","POST"])
 def sell():
     h1 = 'Sell'
     title = 'Terminal Trader'
-    return render_template('sell.html',h1=h1,title=title)
+    symbol = request.form['symbol']
+    quantity = request.form['quantity']
+    username = 'rodrigo'
+    # get price
+    payload_from_wrapper = wrapper.get_stock_price(symbol)
+    price = payload_from_wrapper[1]
+    if price is not None:
+        # check if person has shares to sell... LIST =  [ (ticker, price, quantity ) ]
+        list_of_positions = orm.sell_get_list_of_positions(username)
+        for _ in list_of_positions:
+            if _[0] == symbol:
+                list_of_positions= _
+        if len(list_of_positions) != 0:
+            if int(list_of_positions[2]) >= int(quantity):
+                # edit users table
+                income = float(price) * float(quantity)
+                payload_message1, new_balance, income = orm.sell_stocks_user_table(username,income)
+                if payload_message1 is not False:
+                    # edit transactions table
+                    payload_message2 = orm.sell_stocks_transactions_table(username,symbol,quantity,price)
+                    if payload_message2 is not False:
+                        # edit positions table
+                        orm.sell_stocks_positions_table(username,symbol,float(quantity),float(price))
+                        return render_template('sell.html',h1=h1,title=title,symbol=symbol,
+                                               quantity=quantity,price=price,income=income, new_balance=new_balance)
+                    else:
+                        return render_template('error.html', h1=h1, title=title,
+                                               error_message='Error at transactions table')
+                else:
+                    return render_template('error.html', h1=h1, title=title,
+                                           error_message='Error at users table')
+            else:
+                return render_template('error.html', h1=h1, title=title, error_message='You do not own enough shares')
+        else:
+            return render_template('error.html', h1=h1, title=title, error_message='You do not own this stock')
+    else:
+        return render_template('error.html', h1=h1,title=title,error_message='Stock symbol does not exist')
 
 @app.route('/lookup', methods = ["GET","POST"])
 def lookup():

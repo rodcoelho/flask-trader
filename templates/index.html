@@ -8,7 +8,11 @@
                       <input type="submit" value="Buy">
             </form>
         <p></p>
-            <a href="sell">Sell</a>
+            <form action="/sell" method="POST">
+                      Sell - Symbol <input type="text" name="symbol">
+                      Quantity <input type="text" name="quantity">
+                      <input type="submit" value="Sell">
+            </form>
         <p></p>
 
                 <form action="/lookup" method="POST">Look Up Company's Symbol:

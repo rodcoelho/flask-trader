@@ -1,6 +1,17 @@
 {% extends 'base.html' %}
 {% block content %}
 
+Here is your portfolio summary:
+<br><br>
+Cash: {{ cash }}<br>
+Your portfolio is worth: {{ NPV }}<br>
+Your portfolio is {{ up_or_down }} {{ NPVreturn }}<br><br>
+
+<ul>
+    {% for stock, quantity in stocks %}
+        <li>Symb: {{ stock }}     Quantity: {{ quantity }}</li>
+    {% endfor %}
+</ul>
 
 
 {% endblock %}

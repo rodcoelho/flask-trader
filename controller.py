@@ -10,13 +10,46 @@ import orm, wrapper
 connection = sqlite3.connect('db/stocktrade.db')
 cursor = connection.cursor()
 
-@app.route('/')
-def index():
-    h1 = 'Home'
-    title = 'Terminal Trader'
-    return render_template('index.html',h1=h1,title=title)
 
-@app.route('/portfolio',methods = ["GET","POST"])
+@app.route('/', methods=["GET", "POST"])
+def index():
+    h1 = 'Flask Trader'
+    title = 'Terminal Trader'
+    username = 'rodrigo'
+    cash = orm.get_balance(username)
+    stocks_in_portfolio = orm.sell_get_list_of_positions(username)
+    if stocks_in_portfolio is not False:
+        current_prices = {}
+        # [ (ticker, price, quantity ) ]
+        for stocks in stocks_in_portfolio:
+            name, price = wrapper.get_stock_price(stocks[0])
+            current_prices[stocks[0]] = price
+        NPV = 0
+        for stocks in stocks_in_portfolio:
+            stock_q_times_p = float(stocks[2]) * float(current_prices[stocks[0]])
+            NPV += stock_q_times_p
+        stock_payload = [[x[0].upper(), x[2]] for x in stocks_in_portfolio]
+        NPV += float(cash)
+        NPVreturn = (NPV - 1000000.0) / 1000000.0
+        if NPVreturn > 0.999999:
+            NPVmessage = 'up'
+        else:
+            NPVmessage = 'down'
+        # clean up data
+        cash = '{:.2f}'.format(cash)
+        if len(cash) > 5:
+            cash = cash[:-6] + ',' + cash[-6:]
+        NPV = '{:.2f}'.format(NPV)
+        if len(NPV) > 5:
+            NPV = NPV[:-6] + ',' + NPV[-6:]
+        NPVreturn = '{:.6f}'.format(NPVreturn)
+        return render_template('index.html',h1=h1,title=title,cash=cash,NPV=NPV,NPVreturn=NPVreturn,
+                           up_or_down=NPVmessage, stocks=stock_payload)
+    else:
+        return render_template('error.html', h1=h1, title=title, error_message='Portfolio Error')
+
+
+@app.route('/portfolio', methods=["GET","POST"])
 def portfolio():
     h1 = 'Portfolio'
     title = 'Terminal Trader'

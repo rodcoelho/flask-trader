@@ -39,13 +39,28 @@
       <div class="header">
         <nav>
           <ul class="nav nav-pills pull-right">
-            <li role="presentation" ><a href="/">Home</a></li>
+            <!--<li role="presentation" ><a href="/">Home</a></li>-->
 
           </ul>
         </nav>
-        <h3 class="text-muted">Flask Trader</h3>
       </div>
         <h1>{{ h1 }}</h1>
+
+        <div class="jumbotron">
+        <h1>Portfolio Summary </h1>
+
+Portfolio Net Worth: ${{ NPV }}<br>
+                Cash: ${{ cash }}<br>
+
+<ul>
+    {% for stock, quantity in stocks %}
+        <li>{{ stock }} - {{ quantity }} shares</li>
+    {% endfor %}
+</ul>
+    </div>
+
+
+
 
 
       <div class="jumbotron">
@@ -55,7 +70,11 @@
 
       </div>
 
+
     </div>
+
+
+
 
 
 </body>

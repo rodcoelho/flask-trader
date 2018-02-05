@@ -46,46 +46,48 @@ def index():
         return render_template('index.html',h1=h1,title=title,cash=cash,NPV=NPV,NPVreturn=NPVreturn,
                            up_or_down=NPVmessage, stocks=stock_payload)
     else:
-        return render_template('error.html', h1=h1, title=title, error_message='Portfolio Error')
+
+        return render_template('index.html',h1=h1,title=title,cash=cash,NPV='0',NPVreturn='0',
+                               up_or_down='0', stocks=[])
 
 
-@app.route('/portfolio', methods=["GET","POST"])
-def portfolio():
-    h1 = 'Portfolio'
-    title = 'Terminal Trader'
-    username = 'rodrigo'
-    cash = orm.get_balance(username)
-    stocks_in_portfolio = orm.sell_get_list_of_positions(username)
-    if stocks_in_portfolio is not False:
-        current_prices = {}
-        # [ (ticker, price, quantity ) ]
-        for stocks in stocks_in_portfolio:
-            name, price = wrapper.get_stock_price(stocks[0])
-            current_prices[stocks[0]] = price
-        NPV = 0
-        for stocks in stocks_in_portfolio:
-            stock_q_times_p = float(stocks[2]) * float(current_prices[stocks[0]])
-            NPV += stock_q_times_p
-        stock_payload = [[x[0], x[2]] for x in stocks_in_portfolio]
-        NPV += float(cash)
-        NPVreturn = (NPV - 1000000.0) / 1000000.0
-        if NPVreturn > 0.999999:
-            NPVmessage = 'up'
-        else:
-            NPVmessage = 'down'
-        #clean up data
-        cash ='{:.2f}'.format(cash)
-        NPV = '{:.2f}'.format(NPV)
-        NPVreturn = '{:.6f}'.format(NPVreturn)
-        return render_template('portfolio.html',h1=h1,title=title,cash=cash,
-                               NPV=NPV,NPVreturn=NPVreturn, up_or_down=NPVmessage, stocks=stock_payload)
-    return render_template('error.html', h1=h1, title=title, error_message='Portfolio Error')
-
+# @app.route('/portfolio', methods=["GET","POST"])
+# def portfolio():
+#     h1 = 'Portfolio'
+#     title = 'Terminal Trader'
+#     username = 'rodrigo'
+#     cash = orm.get_balance(username)
+#     stocks_in_portfolio = orm.sell_get_list_of_positions(username)
+#     if stocks_in_portfolio is not False:
+#         current_prices = {}
+#         # [ (ticker, price, quantity ) ]
+#         for stocks in stocks_in_portfolio:
+#             name, price = wrapper.get_stock_price(stocks[0])
+#             current_prices[stocks[0]] = price
+#         NPV = 0
+#         for stocks in stocks_in_portfolio:
+#             stock_q_times_p = float(stocks[2]) * float(current_prices[stocks[0]])
+#             NPV += stock_q_times_p
+#         stock_payload = [[x[0], x[2]] for x in stocks_in_portfolio]
+#         NPV += float(cash)
+#         NPVreturn = (NPV - 1000000.0) / 1000000.0
+#         if NPVreturn > 0.999999:
+#             NPVmessage = 'up'
+#         else:
+#             NPVmessage = 'down'
+#         #clean up data
+#         cash ='{:.2f}'.format(cash)
+#         NPV = '{:.2f}'.format(NPV)
+#         NPVreturn = '{:.6f}'.format(NPVreturn)
+#         return render_template('portfolio.html',h1=h1,title=title,cash=cash,
+#                                NPV=NPV,NPVreturn=NPVreturn, up_or_down=NPVmessage, stocks=stock_payload)
+#     return render_template('error.html', h1=h1, title=title, error_message='Portfolio Error')
 
 @app.route('/buy',methods = ["GET","POST"])
 def buy():
     h1 = 'Buy'
     title = 'Terminal Trader'
+    username = 'rodrigo'
     symbol = request.form['symbol']
     quantity = request.form['quantity']
     # get price
@@ -105,8 +107,37 @@ def buy():
                 orm.buy_stocks_positions_table(quantity,symbol,price,username)
                 payload_message2=orm.buy_stocks_transactions_table(quantity,symbol,price,username)
                 if payload_message2 is True:
+                    # get updated portfolio
+                    cash = orm.get_balance(username)
+                    stocks_in_portfolio = orm.sell_get_list_of_positions(username)
+                    if stocks_in_portfolio is not False:
+                        current_prices = {}
+                        # [ (ticker, price, quantity ) ]
+                        for stocks in stocks_in_portfolio:
+                            name, price = wrapper.get_stock_price(stocks[0])
+                            current_prices[stocks[0]] = price
+                        NPV = 0
+                        for stocks in stocks_in_portfolio:
+                            stock_q_times_p = float(stocks[2]) * float(current_prices[stocks[0]])
+                            NPV += stock_q_times_p
+                        stock_payload = [[x[0].upper(), x[2]] for x in stocks_in_portfolio]
+                        NPV += float(cash)
+                        NPVreturn = (NPV - 1000000.0) / 1000000.0
+                        if NPVreturn > 0.999999:
+                            NPVmessage = 'up'
+                        else:
+                            NPVmessage = 'down'
+                        # clean up data
+                        cash = '{:.2f}'.format(cash)
+                        if len(cash) > 5:
+                            cash = cash[:-6] + ',' + cash[-6:]
+                        NPV = '{:.2f}'.format(NPV)
+                        if len(NPV) > 5:
+                            NPV = NPV[:-6] + ',' + NPV[-6:]
+                        NPVreturn = '{:.6f}'.format(NPVreturn)
                     # return success confirmation
-                    return render_template('buy.html', h1=h1, title=title, quantity=quantity,symbol=symbol,price=price)
+                    return render_template('buy.html', h1=h1, title=title, quantity=quantity,symbol=symbol,price=price,
+                                           cash=cash,NPV=NPV,NPVreturn=NPVreturn,up_or_down=NPVmessage, stocks=stock_payload)
                 else:
                     return render_template('error.html', h1=h1, title=title,
                                            error_message="Error at positions or transactions table")
@@ -148,8 +179,40 @@ def sell():
                     if payload_message2 is not False:
                         # edit positions table
                         orm.sell_stocks_positions_table(username,symbol,float(quantity),float(price))
+                        # get updated positions
+                        username = 'rodrigo'
+                        cash = orm.get_balance(username)
+                        stocks_in_portfolio = orm.sell_get_list_of_positions(username)
+                        if stocks_in_portfolio is not False:
+                            current_prices = {}
+                            # [ (ticker, price, quantity ) ]
+                            for stocks in stocks_in_portfolio:
+                                name, price = wrapper.get_stock_price(stocks[0])
+                                current_prices[stocks[0]] = price
+                            NPV = 0
+                            for stocks in stocks_in_portfolio:
+                                stock_q_times_p = float(stocks[2]) * float(current_prices[stocks[0]])
+                                NPV += stock_q_times_p
+                            stock_payload = [[x[0].upper(), x[2]] for x in stocks_in_portfolio]
+                            NPV += float(cash)
+                            NPVreturn = (NPV - 1000000.0) / 1000000.0
+                            if NPVreturn > 0.999999:
+                                NPVmessage = 'up'
+                            else:
+                                NPVmessage = 'down'
+                            # clean up data
+                            cash = '{:.2f}'.format(cash)
+                            if len(cash) > 5:
+                                cash = cash[:-6] + ',' + cash[-6:]
+                            NPV = '{:.2f}'.format(NPV)
+                            if len(NPV) > 5:
+                                NPV = NPV[:-6] + ',' + NPV[-6:]
+                            NPVreturn = '{:.6f}'.format(NPVreturn)
                         return render_template('sell.html',h1=h1,title=title,symbol=symbol,
-                                               quantity=quantity,price=price,income=income, new_balance=new_balance)
+                                               quantity=quantity,price=price,income=income, new_balance=new_balance,
+                                               cash=cash, NPV=NPV, NPVreturn=NPVreturn,
+                                               up_or_down=NPVmessage, stocks=stock_payload
+                                               )
                     else:
                         return render_template('error.html', h1=h1, title=title,
                                                error_message='Error at transactions table')
@@ -170,6 +233,34 @@ def lookup():
     data = request.form['name']
     payload_from_wrapper = wrapper.get_company_info(data)
     name,exchange,symbol = payload_from_wrapper
+    username = 'rodrigo'
+    cash = orm.get_balance(username)
+    stocks_in_portfolio = orm.sell_get_list_of_positions(username)
+    if stocks_in_portfolio is not False:
+        current_prices = {}
+        # [ (ticker, price, quantity ) ]
+        for stocks in stocks_in_portfolio:
+            name, price = wrapper.get_stock_price(stocks[0])
+            current_prices[stocks[0]] = price
+        NPV = 0
+        for stocks in stocks_in_portfolio:
+            stock_q_times_p = float(stocks[2]) * float(current_prices[stocks[0]])
+            NPV += stock_q_times_p
+        stock_payload = [[x[0].upper(), x[2]] for x in stocks_in_portfolio]
+        NPV += float(cash)
+        NPVreturn = (NPV - 1000000.0) / 1000000.0
+        if NPVreturn > 0.999999:
+            NPVmessage = 'up'
+        else:
+            NPVmessage = 'down'
+        # clean up data
+        cash = '{:.2f}'.format(cash)
+        if len(cash) > 5:
+            cash = cash[:-6] + ',' + cash[-6:]
+        NPV = '{:.2f}'.format(NPV)
+        if len(NPV) > 5:
+            NPV = NPV[:-6] + ',' + NPV[-6:]
+        NPVreturn = '{:.6f}'.format(NPVreturn)
     return render_template('lookup.html',h1=h1,title=title, name=name,exchange=exchange,symbol=symbol)
 
 @app.route('/getstockprice', methods = ["GET","POST"])
@@ -179,6 +270,34 @@ def getstockprice():
     symbol = request.form['symbol']
     payload_from_wrapper = wrapper.get_stock_price(symbol)
     name, price = payload_from_wrapper
+    username = 'rodrigo'
+    cash = orm.get_balance(username)
+    stocks_in_portfolio = orm.sell_get_list_of_positions(username)
+    if stocks_in_portfolio is not False:
+        current_prices = {}
+        # [ (ticker, price, quantity ) ]
+        for stocks in stocks_in_portfolio:
+            name, price = wrapper.get_stock_price(stocks[0])
+            current_prices[stocks[0]] = price
+        NPV = 0
+        for stocks in stocks_in_portfolio:
+            stock_q_times_p = float(stocks[2]) * float(current_prices[stocks[0]])
+            NPV += stock_q_times_p
+        stock_payload = [[x[0].upper(), x[2]] for x in stocks_in_portfolio]
+        NPV += float(cash)
+        NPVreturn = (NPV - 1000000.0) / 1000000.0
+        if NPVreturn > 0.999999:
+            NPVmessage = 'up'
+        else:
+            NPVmessage = 'down'
+        # clean up data
+        cash = '{:.2f}'.format(cash)
+        if len(cash) > 5:
+            cash = cash[:-6] + ',' + cash[-6:]
+        NPV = '{:.2f}'.format(NPV)
+        if len(NPV) > 5:
+            NPV = NPV[:-6] + ',' + NPV[-6:]
+        NPVreturn = '{:.6f}'.format(NPVreturn)
     return render_template('getstockprice.html',h1=h1,title=title,name=name,price=price)
 
 if __name__ == '__main__':
